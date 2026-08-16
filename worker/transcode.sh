@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Baixa um episódio do R2, aplica o filtro VHS/CRT + encode 2-pass mirado
-# em ~target_ratio do tamanho original, sobe o resultado de volta pro R2
+# Baixa um episódio do storage, aplica o filtro VHS/CRT + encode 2-pass
+# mirado em ~target_ratio do tamanho original, sobe o resultado de volta
 # e mantém o status do job atualizado no Upstash Redis a cada etapa.
 #
 # Uso: transcode.sh <jobId> <sourceKey> <originalFilename> [targetRatio]
 #
 # Variáveis de ambiente esperadas:
-#   R2_ACCOUNT_ID, R2_BUCKET, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+#   STORAGE_ENDPOINT, STORAGE_BUCKET, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 #   UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
 set -euo pipefail
 
@@ -18,8 +18,8 @@ SOURCE_KEY="${2:?source key obrigatória}"
 ORIGINAL_FILENAME="${3:?nome do arquivo original obrigatório}"
 TARGET_RATIO="${4:-0.20}"
 
-: "${R2_ACCOUNT_ID:?}" "${R2_BUCKET:?}"
-ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+: "${STORAGE_ENDPOINT:?}" "${STORAGE_BUCKET:?}"
+ENDPOINT="$STORAGE_ENDPOINT"
 
 status() {
   node "$SCRIPT_DIR/lib/status.mjs" "$JOB_ID" "$@"
@@ -37,7 +37,7 @@ OUTPUT_KEY="outputs/${JOB_ID}/${OUT_NAME}"
 
 status status=processing stage=download
 
-aws s3 cp "s3://${R2_BUCKET}/${SOURCE_KEY}" "$IN" --endpoint-url "$ENDPOINT"
+aws s3 cp "s3://${STORAGE_BUCKET}/${SOURCE_KEY}" "$IN" --endpoint-url "$ENDPOINT"
 
 status status=processing stage=analyze
 
@@ -65,7 +65,7 @@ status status=processing stage=upload
 
 OUTPUT_BYTES="$(stat -c%s "$OUT")"
 
-aws s3 cp "$OUT" "s3://${R2_BUCKET}/${OUTPUT_KEY}" --endpoint-url "$ENDPOINT"
+aws s3 cp "$OUT" "s3://${STORAGE_BUCKET}/${OUTPUT_KEY}" --endpoint-url "$ENDPOINT"
 
 ACHIEVED_RATIO="$(awk -v o="$OUTPUT_BYTES" -v s="$SOURCE_BYTES" 'BEGIN { printf "%.3f", o / s }')"
 

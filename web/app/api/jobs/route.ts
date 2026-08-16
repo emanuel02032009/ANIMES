@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { presignUpload, presignDownload, uploadKeyFor } from "@/lib/r2";
+import { presignUpload, presignDownload, uploadKeyFor } from "@/lib/storage";
 import { createJob, listJobs } from "@/lib/kv";
 
 export async function POST(req: NextRequest) {

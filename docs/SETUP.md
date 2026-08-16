@@ -3,24 +3,33 @@
 Passo a passo para colocar o sistema no ar. Tudo nas camadas gratuitas dos
 respectivos serviços.
 
-## 1. Cloudflare R2 (armazenamento)
+## 1. Backblaze B2 (armazenamento)
 
-1. Crie uma conta gratuita em https://dash.cloudflare.com e ative o R2.
-2. Crie um bucket (ex.: `vhs-anime`).
-3. Em **R2 → Manage API Tokens**, crie um token com permissão
-   *Object Read & Write* restrita a esse bucket. Anote:
-   - Account ID
-   - Access Key ID
-   - Secret Access Key
-4. Configure CORS no bucket (necessário para o navegador enviar/baixar
-   arquivos direto do R2, contornando a Vercel):
+Sem cartão de crédito — só conta com e-mail (pode ser o Gmail).
+
+1. Crie uma conta gratuita em https://www.backblaze.com/sign-up/cloud-storage.
+2. Vá em **B2 Cloud Storage → Buckets → Create a Bucket** (ex.: `vhs-anime`,
+   privado). Anote a **região** mostrada (ex.: `us-west-004`).
+3. Em **Application Keys → Add a New Application Key**, crie uma chave
+   restrita a esse bucket, com permissão de leitura e escrita. Anote:
+   - `keyID` (equivalente ao Access Key ID)
+   - `applicationKey` (equivalente ao Secret Access Key)
+4. O endpoint S3-compatível segue o padrão
+   `https://s3.<região>.backblazeb2.com` (ex.:
+   `https://s3.us-west-004.backblazeb2.com`) — não precisa criar nada, só
+   montar essa URL com a região do passo 2.
+5. Configure CORS no bucket (necessário para o navegador enviar/baixar
+   arquivos direto do B2, contornando a Vercel) — em **Bucket Settings →
+   CORS Rules**:
 
    ```json
    [
      {
-       "AllowedOrigins": ["https://SEU-APP.vercel.app", "http://localhost:3000"],
-       "AllowedMethods": ["GET", "PUT", "HEAD"],
-       "AllowedHeaders": ["*"]
+       "corsRuleName": "vhs-anime-web",
+       "allowedOrigins": ["https://SEU-APP.vercel.app", "http://localhost:3000"],
+       "allowedOperations": ["s3_get", "s3_put", "s3_head"],
+       "allowedHeaders": ["*"],
+       "maxAgeSeconds": 3600
      }
    ]
    ```
@@ -39,7 +48,10 @@ respectivos serviços.
    `emanuel02032009/animes`, com permissão **Contents: Read and write**.
 2. Em **Settings → Secrets and variables → Actions** deste repositório,
    cadastre os secrets usados pelo workflow `.github/workflows/transcode.yml`:
-   - `R2_ACCOUNT_ID`, `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`
+   - `STORAGE_ENDPOINT` (ex.: `https://s3.us-west-004.backblazeb2.com`),
+     `STORAGE_REGION` (ex.: `us-west-004`), `STORAGE_BUCKET`,
+     `STORAGE_ACCESS_KEY_ID` (o `keyID`), `STORAGE_SECRET_ACCESS_KEY` (a
+     `applicationKey`)
    - `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`
 3. Mantenha o repositório **privado** (2000 min/mês grátis de Actions já é
    suficiente para uso pessoal). Só considere torná-lo público se algum
@@ -52,11 +64,12 @@ respectivos serviços.
    **Root Directory** para `web/`.
 2. Configure as mesmas variáveis de `web/.env.example` em
    **Settings → Environment Variables**:
-   - `R2_ACCOUNT_ID`, `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`
+   - `STORAGE_ENDPOINT`, `STORAGE_REGION`, `STORAGE_BUCKET`,
+     `STORAGE_ACCESS_KEY_ID`, `STORAGE_SECRET_ACCESS_KEY`
    - `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`
    - `GH_PAT` (o token criado no passo 3), `GITHUB_REPO_OWNER=emanuel02032009`,
      `GITHUB_REPO_NAME=animes`
-3. Deploy. Depois, volte no bucket R2 (passo 1.4) e ajuste o CORS com a
+3. Deploy. Depois, volte no bucket B2 (passo 1.5) e ajuste o CORS com a
    URL final `https://SEU-APP.vercel.app`.
 
 ## 5. Testar antes de processar a biblioteca inteira

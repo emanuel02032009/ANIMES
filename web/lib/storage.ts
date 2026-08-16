@@ -1,15 +1,16 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-const accountId = process.env.R2_ACCOUNT_ID!;
-const bucket = process.env.R2_BUCKET!;
+// Qualquer storage S3-compatível funciona aqui (Backblaze B2 por padrão,
+// mas também Cloudflare R2 ou outro) — só troca o endpoint/região/credenciais.
+const bucket = process.env.STORAGE_BUCKET!;
 
-export const r2 = new S3Client({
-  region: "auto",
-  endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+export const storage = new S3Client({
+  region: process.env.STORAGE_REGION || "auto",
+  endpoint: process.env.STORAGE_ENDPOINT!,
   credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+    accessKeyId: process.env.STORAGE_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.STORAGE_SECRET_ACCESS_KEY!,
   },
 });
 
@@ -19,10 +20,10 @@ export function uploadKeyFor(jobId: string, filename: string) {
 
 export async function presignUpload(key: string, contentType: string) {
   const cmd = new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: contentType });
-  return getSignedUrl(r2, cmd, { expiresIn: 3600 });
+  return getSignedUrl(storage, cmd, { expiresIn: 3600 });
 }
 
 export async function presignDownload(key: string) {
   const cmd = new GetObjectCommand({ Bucket: bucket, Key: key });
-  return getSignedUrl(r2, cmd, { expiresIn: 3600 });
+  return getSignedUrl(storage, cmd, { expiresIn: 3600 });
 }

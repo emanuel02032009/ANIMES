@@ -6,8 +6,8 @@ comprimir o resultado para um tamanho-alvo, pronto para gravar em
 pendrive/DVD-R.
 
 - **Como funciona / arquitetura**: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
-- **Como colocar no ar (Vercel + Cloudflare R2 + Upstash + GitHub Actions,
-  tudo em camada gratuita)**: [`docs/SETUP.md`](docs/SETUP.md)
+- **Como colocar no ar (Vercel + Backblaze B2 + Upstash + GitHub Actions,
+  tudo em camada gratuita e sem cartão de crédito)**: [`docs/SETUP.md`](docs/SETUP.md)
 
 ## Estrutura
 

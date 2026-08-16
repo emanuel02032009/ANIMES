@@ -5,7 +5,7 @@ anime e comprimi-los para um tamanho-alvo, sem depender de acesso direto
 ao seu PC.
 
 ```
-navegador (upload/download) ──► Cloudflare R2 (arquivos)
+navegador (upload/download) ──► Backblaze B2 (arquivos)
         │                              ▲
         │ cria job / confirma upload   │ download/upload direto
         ▼                              │
@@ -17,11 +17,14 @@ navegador (upload/download) ──► Cloudflare R2 (arquivos)
 
 - **Web (`/web`)**: Next.js hospedado na Vercel. Só orquestra — nunca recebe
   os bytes do vídeo (limite de 4.5MB por requisição em funções serverless
-  da Vercel tornaria isso inviável). Gera URLs pré-assinadas do R2 para o
+  da Vercel tornaria isso inviável). Gera URLs pré-assinadas do B2 para o
   navegador enviar/baixar os arquivos diretamente.
-- **Armazenamento (Cloudflare R2)**: bucket S3-compatível, 10GB grátis,
-  sem custo de egress. Guarda originais em `uploads/<jobId>/<arquivo>` e
-  resultados em `outputs/<jobId>/<arquivo>`.
+- **Armazenamento (Backblaze B2, `web/lib/storage.ts`)**: bucket
+  S3-compatível, 10GB grátis, sem cartão de crédito. Guarda originais em
+  `uploads/<jobId>/<arquivo>` e resultados em `outputs/<jobId>/<arquivo>`.
+  O código usa `@aws-sdk/client-s3` genérico via `STORAGE_ENDPOINT`, então
+  qualquer storage S3-compatível (R2, MinIO etc.) funciona só trocando as
+  variáveis de ambiente.
 - **Worker (`/worker` + `.github/workflows/transcode.yml`)**: disparado via
   `repository_dispatch` quando o upload é confirmado. Roda num runner do
   GitHub Actions (4 vCPU/16GB, timeout de 6h — necessário porque o filtro
