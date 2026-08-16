@@ -1,0 +1,32 @@
+name: Transcode Episode
+
+on:
+  repository_dispatch:
+    types: [process-episode]
+
+jobs:
+  transcode:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Processar episódio (filtro VHS/CRT + compressão)
+        env:
+          JOB_ID: ${{ github.event.client_payload.job_id }}
+          SOURCE_KEY: ${{ github.event.client_payload.source_key }}
+          ORIGINAL_FILENAME: ${{ github.event.client_payload.original_filename }}
+          TARGET_RATIO: ${{ github.event.client_payload.target_ratio }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+        run: |
+          chmod +x worker/transcode.sh
+          ./worker/transcode.sh "$JOB_ID" "$SOURCE_KEY" "$ORIGINAL_FILENAME" "$TARGET_RATIO"

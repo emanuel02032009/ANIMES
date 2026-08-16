@@ -1,0 +1,1 @@
+scale=720:480:flags=fast_bilinear,eq=contrast=1.1:brightness=-0.03:saturation=0.88,chromashift=cbh=3:crh=-3,noise=alls=22:allf=t+u,format=yuv420p,geq=lum='lum(X,Y)*(0.85+0.15*mod(Y,2))':cb='cb(X,Y)':cr='cr(X,Y)'
